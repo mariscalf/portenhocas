@@ -59,11 +59,34 @@
 
   /* ---- Montador de pedido (2 passos) ---- */
   (function () {
-    var PRICE = 9,
-      DOZEN = 90,
-      DSIZE = 12,
+    /* =======================================================
+       PREÇO — mude SÓ o valor de PRICE. O resto se calcula sozinho.
+       PRICE = preço de uma empanada (use ponto para centavos: 11.99)
+       Na dúzia, paga-se 10 e leva-se 12 (2 de brinde).
+       ======================================================= */
+    var PRICE = 11.99;
+
+    var DSIZE = 12,
+      PAY_PER_DOZEN = 10,
+      DOZEN = PRICE * PAY_PER_DOZEN,
       MINQ = 1,
       MAXQ = 120;
+
+    /* Formata em reais: R$ 11,99 (vírgula decimal, padrão BR) */
+    function fmt(n) {
+      return "R$ " + n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    /* Escreve os preços no cardápio a partir do preço unitário */
+    (function fillMenuPrices() {
+      var unidade = document.getElementById("precoUnidade"),
+        duzia = document.getElementById("precoDuzia"),
+        economia = document.getElementById("precoEconomia");
+      var save = PRICE * DSIZE - DOZEN;
+      if (unidade) unidade.textContent = fmt(PRICE);
+      if (duzia) duzia.textContent = fmt(DOZEN);
+      if (economia) economia.textContent = "leve 12, pague 10";
+    })();
     var FLAVORS = [
       { name: "Carne suave" },
       { name: "Carne à faca" },
@@ -81,16 +104,16 @@
     if (!step1 || !step2) return;
 
     function priceFor(n) { return Math.floor(n / DSIZE) * DOZEN + (n % DSIZE) * PRICE; }
-    function fmt(n) { return "R$ " + Math.round(n); }
     function sumCounts() { var s = 0; for (var k in counts) { s += counts[k]; } return s; }
 
     function updatePreview() {
       var total = priceFor(qty), full = qty * PRICE, save = full - total;
+      var brinde = Math.floor(qty / DSIZE) * (DSIZE - PAY_PER_DOZEN);
       $("qval").textContent = qty;
       $("ppTotal").textContent = fmt(total);
       var d = qty + " empanada" + (qty > 1 ? "s" : "");
-      if (save > 0) {
-        $("ppDetail").innerHTML = d + ' · <span class="pp-save">economia de ' + fmt(save) + "</span>";
+      if (brinde > 0) {
+        $("ppDetail").innerHTML = d + ' · <span class="pp-save">' + brinde + " de brinde · economia de " + fmt(save) + "</span>";
       } else {
         $("ppDetail").textContent = d;
       }
